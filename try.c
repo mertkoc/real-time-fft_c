@@ -5,8 +5,7 @@
 #include <complex.h>
 #define PI 3.141592
 typedef double complex cplx;
-cplx *x;
-cplx *h;
+
 void _fft(cplx buf[], cplx out[], int n, int step)
 {
 
@@ -61,7 +60,7 @@ void ifft(cplx buf[], int n)
 void showf(char *s, cplx buf[], int n) {
 	FILE *p;
 	//printf("ShowF N: %d\n",n);
-	p = fopen("/home/mert/Desktop/real-time-fft_c/result.txt","a");
+	p = fopen("/home/mert/Desktop/asd/asd/real-time-fft_c/result.txt","a");
 	int i;
 	fprintf(p,"%s: ", s);
 	for (int i = 0; i < n; i++)
@@ -77,7 +76,7 @@ void showf(char *s, cplx buf[], int n) {
 void showresult(char *s, double *result,int n)
 {
 	FILE *p;
-	p = fopen("/home/mert/Desktop/real-time-fft_c/result.txt","a");
+	p = fopen("/home/mert/Desktop/asd/asd/real-time-fft_c/result.txt","a");
 	int i;
 	fprintf(p,"%s: ", s);
 	for (int i = 0; i < n; i++)
@@ -87,20 +86,17 @@ void showresult(char *s, double *result,int n)
 	fprintf(p,"\n");
 	fclose(p);
 }
-double *overlapsave(cplx x[],cplx h[],int L,int P, int M)
+double *overlapsave(double result[],cplx x[],cplx h[],int L,int P, int M)
 {
 	int j;
 	cplx fft_x[L];
 	cplx ifft_x[L];
 	cplx tmp_x[L];
 	cplx fft_h[L];
-		
-	
 	cplx x_zeropadded[P+M];
 	int i;
 	int k;
 	int maxincrement = P/(L- (M -1));
-	double result [P+M-1];
     for(i=0;i<P;i++)
     {
 		//printf("%d ",i);
@@ -142,35 +138,34 @@ double *overlapsave(cplx x[],cplx h[],int L,int P, int M)
 			result[i*(L-(M-1))+(k - (M -1))] = creal(ifft_x[k]);
 		
 	}
-	for(i = 0; i < (P+M-1) ; i++)
-		printf("%f\t",result[i]);
-	printf("\n");
+	//for(i = 0; i < (P+M-1) ; i++)
+	//	printf("%f\t",result[i]);
+	//printf("\n");
 	return result;
 
 }
 int main()
-{
-
+{	
+	cplx *x;
+	cplx *h;
 	int P = 1024; //Input size
 	int M = 16; //filter length
 	double *result;
 	int seed = time(NULL);
-    srand(seed);
+    	srand(seed);
 	int L = 128; // block size
 	result = malloc((P+M-1)*sizeof(cplx));
 	x = malloc((P)*sizeof(cplx));
 	h = malloc((M)*sizeof(cplx));
 	//printf("Sizeof x = %ld\n",(sizeof(x)/sizeof(x[0])));
 	//printf("Overlapsave basladi\n");
-	result = overlapsave(x,h,L,P,M);
+	result = overlapsave(result,x,h,L,P,M);
 	
 	char a[] = "Input";
 	char b[] = "Filter";
-	//char c[] = "Result";
+	char c[] = "Result";
 	showf(&a,x,P);
 	showf(&b,h,M);
-	//showresult(&c,result,(P+M-1));
-	
-	
+	showresult(&c,result,(P+M-1));
 	return 0;
 }
