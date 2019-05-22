@@ -2,12 +2,35 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <complex.h>
-#define PI 3.141592
-typedef double complex cplx;
+#include <stdbool.h>
+typedef struct cmplx{
 
+double Re;
+double Im;
+	
+}cplx;
+cplx cexp(double n){
+
+	cplx x;
+	x.Re = cos(n);
+	x.Im = sin(n);
+	return x;
+}
+double cimag(cplx x){
+	return x.Im;
+}
+double creal(cplx x){
+	return x.Re;
+}
+void complexmult(cplx* x, cplx* y,cplx* result){
+
+	result->Re = x->Re*y->Re - x->Im*y->Im;
+	result->Im = x->Re*y->Im + x->Im*y->Re;
+	
+}
 void _fft(cplx buf[], cplx out[], int n, int step)
 {
+	static double PI = 3.141592;
 
 
 	if (step < n) {
@@ -15,9 +38,13 @@ void _fft(cplx buf[], cplx out[], int n, int step)
 		_fft(out + step, buf + step, n, step * 2);
  
 		for (int i = 0; i < n; i += 2 * step) {
-			cplx t = cexp(-I * PI * i / n) * out[i + step];
-			buf[i / 2]     = out[i] + t;
-			buf[(i + n)/2] = out[i] - t;
+			cplx temp = cexp(-PI * i / n);
+			cplx t;
+			complexmult(&temp,&out[i+step],&t);
+			buf[i / 2].Re = out[i].Re + t.Re;
+			buf[i / 2].Im = out[i].Im + t.Im;
+			buf[(i + n)/2].Re = out[i].Re - t.Re;
+			buf[(i + n)/2].Im = out[i].Im - t.Im;
 		}
 	}
 }
@@ -25,7 +52,10 @@ void _fft(cplx buf[], cplx out[], int n, int step)
 void fft(cplx buf[], int n)
 {
 	cplx out[n];
-	for (int i = 0; i < n; i++) out[i] = buf[i];
+	for (int i = 0; i < n; i++){ 
+		out[i].Re = buf[i].Re;
+		out[i].Im = buf[i].Im;
+	}
  
 	_fft(buf, out, n, 1);
 }
@@ -33,9 +63,9 @@ void show(const char * s, cplx buf[], int n) {
 	printf("%s", s);
 	for (int i = 0; i < n; i++)
 		if (!cimag(buf[i]))
-			printf("%g ", creal(buf[i]));
+			printf("%f ", creal(buf[i]));
 		else
-			printf("(%g, %g) ", creal(buf[i]), cimag(buf[i]));
+			printf("(%f, %f) ", creal(buf[i]), cimag(buf[i]));
 }
 void ifft(cplx buf[], int n)
 {
@@ -46,29 +76,40 @@ void ifft(cplx buf[], int n)
 	//printf("FFT done\n");
 	for (i = 1; i < n;i++)
 	{
-		reverse[n-i] = buf[i];
+		reverse[n-i].Re = buf[i].Re;
+		reverse[n-i].Im = buf[i].Im;
 	}
 	//printf("Reverse done\n");
 	for (i = 0; i < n;i++)
 	{
 		//printf("Final i: %d\n",i);
-		i < 1 ? (buf[i] /= n) : (buf[i] = reverse[i]/n);
+		if (i < 1){
+			(buf[i].Re /= n);
+			(buf[i].Im /= n);
+		}
+		else
+		{
+			(buf[i].Re = reverse[i].Re/n);
+			(buf[i].Im = reverse[i].Im/n);
+		}
 	}
 
 	
 }
+void printcomp(cplx x,char *s){
+	printf("%s Real: %f\t%s Imag: %f\n",s,x.Re,s,x.Im);}
 void showf(char *s, cplx buf[], int n) {
 	FILE *p;
 	//printf("ShowF N: %d\n",n);
-	p = fopen("/home/mert/Desktop/asd/asd/real-time-fft_c/result.txt","a");
+	p = fopen("/home/mert/Desktop/real-time-fft_c/result.txt","a");
 	int i;
 	fprintf(p,"%s: ", s);
 	for (int i = 0; i < n; i++)
 	{
 			if (!cimag(buf[i]))
-			fprintf(p,"%g ", creal(buf[i]));
+			fprintf(p,"%f ", creal(buf[i]));
 		else
-			fprintf(p,"(%g, %g) ", creal(buf[i]), cimag(buf[i]));
+			fprintf(p,"(%f, %f) ", creal(buf[i]), cimag(buf[i]));
 	}
 	fprintf(p,"\n");
 	fclose(p);
@@ -76,7 +117,7 @@ void showf(char *s, cplx buf[], int n) {
 void showresult(char *s, double *result,int n)
 {
 	FILE *p;
-	p = fopen("/home/mert/Desktop/asd/asd/real-time-fft_c/result.txt","a");
+	p = fopen("/home/mert/Desktop/real-time-fft_c/result.txt","a");
 	int i;
 	fprintf(p,"%s: ", s);
 	for (int i = 0; i < n; i++)
@@ -86,81 +127,101 @@ void showresult(char *s, double *result,int n)
 	fprintf(p,"\n");
 	fclose(p);
 }
-double *overlapsave(double result[],cplx x[],cplx h[],int L,int P, int M)
+void randomize(cplx x[], int size, double range,double average,bool imag){
+	int i;
+	for (i = 0; i < size;i++){
+		x[i].Re = (rand() % (int)(2*range + 1)) - range + average;
+		//printf("rand x: %f\n",x[i].Re);
+		if (imag)
+			x[i].Im = (rand() % (int)(2*range + 1)) - range + average;
+		else
+			x[i].Im = 0;
+	}
+	
+}
+	
+void overlapsave(double *result,cplx x[],cplx h[],int L,int P, int M)
 {
 	int j;
 	cplx fft_x[L];
 	cplx ifft_x[L];
 	cplx tmp_x[L];
 	cplx fft_h[L];
-	cplx x_zeropadded[P+M];
+	cplx x_zeropadded[P+L-(P%(L-M+1))];
 	int i;
 	int k;
 	int maxincrement = P/(L- (M -1));
-    for(i=0;i<P;i++)
-    {
-		//printf("%d ",i);
-		x[i] = rand() % 201 -100;
-	}
-	for (i = 0; i<M; i++)
+	if((P%(L-(M-1))) != 0)
+		maxincrement++;
+	for (i = 0; i < P+L-(P%(L-M+1)); i++)
 	{
-		h[i] = rand() % 10;
-		
+		//if( i < M -1){
+		// 	x_zeropadded[i].Re = 0;
+		//	x_zeropadded[i].Im = 0;
+		//}
+		if((i < (P + M - 1))&&(i >= (M-1))){
+			x_zeropadded[i].Re= x[i-(M-1)].Re;
+			x_zeropadded[i].Im = x[i-(M-1)].Im;
+		}
+		else{
+		 	x_zeropadded[i].Re = 0;
+			x_zeropadded[i].Im = 0;
+		}
+		//printf("Zeropaddedx: %f\n",x_zeropadded[i].Re);
 	}
-	//printf("Filter yaratti\n");
-	for (i = 0; i < P+M-1;i++)
-	{
-		if( i < M -1)
-			x_zeropadded[i] = 0;
-		else
-			x_zeropadded[i] = x[i-(M-1)];
-	}
-	//printf("Zeropadded\n");
+	printf("Zeropadded\n");
 	for(i = 0; i < maxincrement ; i++)
 	{
 		//printf("First for: %d\n", i);
 		for(j = 0; j < L; j++)
 		{
 			//printf("Second for: %d\n", (i*(L-(M-1))+j));
-			tmp_x[j] = x_zeropadded[i*(L-(M-1))+j];
-			//printf("Cikti\n");
-			
+			tmp_x[j].Re = x_zeropadded[i*(L-(M-1))+j].Re;
+			tmp_x[j].Im = x_zeropadded[i*(L-(M-1))+j].Im;
+
 		}
 		fft(tmp_x,L);
-		for (k = 0; k< L; k++)
-			fft_h[k] = h[k];
+		for (k = 0; k< L; k++){
+			(k < M) ? (fft_h[k].Re = h[k].Re): (fft_h[k].Re = 0.0);
+			(k < M) ? (fft_h[k].Im = h[k].Im): (fft_h[k].Im = 0.0);
+			printcomp(fft_h[k],"fft_h");
+		}	
 		fft(fft_h,L);
 		for (k = 0;k < L; k++)
-			ifft_x[k] = tmp_x[k]*fft_h[k];
+		{
+			complexmult(&tmp_x[k],&fft_h[k],&ifft_x[k]);
+		}
 		//printf("IFFT\n");
 		ifft(ifft_x, L);
 		for (k = M-1; k < L; k++)
 			result[i*(L-(M-1))+(k - (M -1))] = creal(ifft_x[k]);
-		
+
 	}
 	//for(i = 0; i < (P+M-1) ; i++)
 	//	printf("%f\t",result[i]);
 	//printf("\n");
-	return result;
+	
 
 }
 int main()
 {	
-	cplx *x;
-	cplx *h;
 	int P = 1024; //Input size
 	int M = 16; //filter length
 	double *result;
+	cplx x[P];
+	cplx h[M];
 	int seed = time(NULL);
     	srand(seed);
 	int L = 128; // block size
-	result = malloc((P+M-1)*sizeof(cplx));
-	x = malloc((P)*sizeof(cplx));
-	h = malloc((M)*sizeof(cplx));
-	//printf("Sizeof x = %ld\n",(sizeof(x)/sizeof(x[0])));
-	//printf("Overlapsave basladi\n");
-	result = overlapsave(result,x,h,L,P,M);
-	
+	result = malloc((P+M-1)*sizeof(double));
+	//x = malloc((P)*sizeof(cplx));
+	//h = malloc((M)*sizeof(cplx));
+	randomize(x,P,100,0,false); // Real signal decleration
+	randomize(h,M,10,0,false);
+	printf("Randomized\n");
+	int i;
+	overlapsave(result,x,h,L,P,M);
+	printf("Overlapped and saved\n");
 	char a[] = "Input";
 	char b[] = "Filter";
 	char c[] = "Result";
