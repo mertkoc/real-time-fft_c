@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <stdbool.h>
 typedef struct cmplx{
 
 double Re;
@@ -127,7 +126,7 @@ void showresult(char *s, double *result,int n)
 	fprintf(p,"\n");
 	fclose(p);
 }
-void randomize(cplx x[], int size, double range,double average,bool imag){
+void randomize(cplx x[], int size, double range,double average,unsigned char imag){
 	int i;
 	for (i = 0; i < size;i++){
 		x[i].Re = (rand() % (int)(2*range + 1)) - range + average;
@@ -139,8 +138,19 @@ void randomize(cplx x[], int size, double range,double average,bool imag){
 	}
 	
 }
-	
-void overlapsave(double *result,cplx x[],cplx h[],int L,int P, int M)
+cplx* doubletocplx(double *x,int size)
+{
+	int i;
+	cplx *result;
+	result = malloc(size*sizeof(cplx));
+	for(i = 0; i < size ; i++)
+	{
+		result[i].Re = x[i];
+		result[i].Im = 0;
+	}
+	return result;
+}
+void overlapsave(double *result,cplx *x,cplx *h,int L,int P, int M)
 {
 	int j;
 	cplx fft_x[L];
@@ -216,8 +226,8 @@ int main()
 	result = malloc((P+M-1)*sizeof(double));
 	//x = malloc((P)*sizeof(cplx));
 	//h = malloc((M)*sizeof(cplx));
-	randomize(x,P,100,0,false); // Real signal decleration
-	randomize(h,M,10,0,false);
+	randomize(x,P,100,0,0); // Real signal decleration
+	randomize(h,M,10,0,0);
 	printf("Randomized\n");
 	int i;
 	overlapsave(result,x,h,L,P,M);
