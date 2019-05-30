@@ -138,17 +138,14 @@ void randomize(cplx x[], int size, double range,double average,unsigned char ima
 	}
 	
 }
-cplx* doubletocplx(double *x,int size)
+void doubletocplx(double *x,cplx* result,int size)
 {
 	int i;
-	cplx *result;
-	result = malloc(size*sizeof(cplx));
 	for(i = 0; i < size ; i++)
 	{
 		result[i].Re = x[i];
 		result[i].Im = 0;
 	}
-	return result;
 }
 void overlapsave(double *result,cplx *x,cplx *h,int L,int P, int M)
 {
