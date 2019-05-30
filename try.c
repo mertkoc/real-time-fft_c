@@ -130,7 +130,6 @@ void randomize(cplx x[], int size, double range,double average,unsigned char ima
 	int i;
 	for (i = 0; i < size;i++){
 		x[i].Re = (rand() % (int)(2*range + 1)) - range + average;
-		//printf("rand x: %f\n",x[i].Re);
 		if (imag)
 			x[i].Im = (rand() % (int)(2*range + 1)) - range + average;
 		else
@@ -138,16 +137,7 @@ void randomize(cplx x[], int size, double range,double average,unsigned char ima
 	}
 	
 }
-void doubletocplx(double *x,cplx* result,int size)
-{
-	int i;
-	for(i = 0; i < size ; i++)
-	{
-		result[i].Re = x[i];
-		result[i].Im = 0;
-	}
-}
-void overlapsave(double *result,cplx *x,cplx *h,int L,int P, int M)
+void overlapsave(double *result,double *x,double *h,int L,int P, int M)
 {
 	int j;
 	cplx fft_x[L];
@@ -162,24 +152,17 @@ void overlapsave(double *result,cplx *x,cplx *h,int L,int P, int M)
 		maxincrement++;
 	for (i = 0; i < P+L-(P%(L-M+1)); i++)
 	{
-		//if( i < M -1){
-		// 	x_zeropadded[i].Re = 0;
-		//	x_zeropadded[i].Im = 0;
-		//}
 		if((i < (P + M - 1))&&(i >= (M-1))){
-			x_zeropadded[i].Re= x[i-(M-1)].Re;
-			x_zeropadded[i].Im = x[i-(M-1)].Im;
+			x_zeropadded[i].Re= x[i-(M-1)];
+			x_zeropadded[i].Im = 0;
 		}
 		else{
 		 	x_zeropadded[i].Re = 0;
 			x_zeropadded[i].Im = 0;
 		}
-		//printf("Zeropaddedx: %f\n",x_zeropadded[i].Re);
 	}
-	printf("Zeropadded\n");
 	for(i = 0; i < maxincrement ; i++)
 	{
-		//printf("First for: %d\n", i);
 		for(j = 0; j < L; j++)
 		{
 			//printf("Second for: %d\n", (i*(L-(M-1))+j));
@@ -189,24 +172,19 @@ void overlapsave(double *result,cplx *x,cplx *h,int L,int P, int M)
 		}
 		fft(tmp_x,L);
 		for (k = 0; k< L; k++){
-			(k < M) ? (fft_h[k].Re = h[k].Re): (fft_h[k].Re = 0.0);
-			(k < M) ? (fft_h[k].Im = h[k].Im): (fft_h[k].Im = 0.0);
-			printcomp(fft_h[k],"fft_h");
+			fft_h[k].Re = (k < M) ? h[k] : 0.0;
+			fft_h[k].Im = 0.0;
 		}	
 		fft(fft_h,L);
 		for (k = 0;k < L; k++)
 		{
 			complexmult(&tmp_x[k],&fft_h[k],&ifft_x[k]);
 		}
-		//printf("IFFT\n");
 		ifft(ifft_x, L);
 		for (k = M-1; k < L; k++)
 			result[i*(L-(M-1))+(k - (M -1))] = creal(ifft_x[k]);
 
 	}
-	//for(i = 0; i < (P+M-1) ; i++)
-	//	printf("%f\t",result[i]);
-	//printf("\n");
 
 }
 int main()
