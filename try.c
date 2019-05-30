@@ -150,10 +150,8 @@ cplx* doubletocplx(double *x,int size)
 	}
 	return result;
 }
-double* overlapsave(cplx *x,cplx *h,int L,int P, int M)
+void overlapsave(double *result,cplx *x,cplx *h,int L,int P, int M)
 {
-	static double *result;
-	result = malloc((P+M-1)*sizeof(double));
 	int j;
 	cplx fft_x[L];
 	cplx ifft_x[L];
@@ -212,7 +210,6 @@ double* overlapsave(cplx *x,cplx *h,int L,int P, int M)
 	//for(i = 0; i < (P+M-1) ; i++)
 	//	printf("%f\t",result[i]);
 	//printf("\n");
-	return result;	
 
 }
 int main()
@@ -231,7 +228,7 @@ int main()
 	randomize(h,M,10,0,0);
 	printf("Randomized\n");
 	int i;
-	result = overlapsave(x,h,L,P,M);
+	overlapsave(result,x,h,L,P,M);
 	printf("Overlapped and saved\n");
 	char a[] = "Input";
 	char b[] = "Filter";
