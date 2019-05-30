@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "overlapsave.h"
 typedef struct cmplx{
 
 double Re;
@@ -137,7 +138,7 @@ void randomize(cplx x[], int size, double range,double average,unsigned char ima
 	}
 	
 }
-void overlapsave(double *result,double *x,double *h,int L,int P, int M)
+extern void overlapsave(double *result,double *x,double *h,int L,int P, int M)
 {
 	int j;
 	cplx fft_x[L];
@@ -196,6 +197,7 @@ int main()
 	cplx h[M];
 	int seed = time(NULL);
     	srand(seed);
+	result = malloc((P+M-1)*sizeof(double));
 	int L = 128; // block size
 	//x = malloc((P)*sizeof(cplx));
 	//h = malloc((M)*sizeof(cplx));
